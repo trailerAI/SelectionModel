@@ -14,9 +14,21 @@ import wandb
 import os
 import json
 from sklearn.metrics import f1_score, accuracy_score
+import argparse
+import yaml
 
 os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="train")
+    parser.add_argument("--config_path", type=str, default="configs/config.yaml",help="config dir")
+    args = parser.parse_args()
+    return args
+
+def read_config(config_path):
+    with open(config_path) as file:
+        config = yaml.load(file, Loader=yaml.FullLoader)
+    return config
 
 def compute_metrics(p):
     preds = p.predictions.tolist()
@@ -35,8 +47,8 @@ def compute_metrics(p):
 
 
 
-def main():
-    model_path = "klue/roberta-base"
+def main(config):
+    model_path = config['model']['model_name']
     tokenizer = AutoTokenizer.from_pretrained(model_path)
 
     def preprocess(example):
@@ -47,8 +59,8 @@ def main():
         return tokenized_example
 
 
-    train = pd.read_parquet("/home/jisukim/playground-NLP/DPR/selected_model/datasets/train_top10_dataset.parquet")
-    valid = pd.read_parquet("/home/jisukim/playground-NLP/DPR/selected_model/datasets/valid_top10_dataset.parquet")
+    train = pd.read_parquet(config['data']['train'])
+    valid = pd.read_parquet(config['data']['valid'])
 
 
     train_dataset = Dataset.from_pandas(train)
@@ -62,9 +74,9 @@ def main():
 
     model = AutoModelForSequenceClassification.from_pretrained(model_path).to(device)
 
-
+    output_dir = config['data']['output_dir']
     training_args = TrainingArguments(
-        output_dir='./output_top10',
+        output_dir=f'./{output_dir}',
         overwrite_output_dir=True,
         load_best_model_at_end=True,
         save_total_limit=2,
@@ -73,9 +85,9 @@ def main():
         learning_rate=2e-6,
         eval_steps=500,
         logging_steps=500,
-        per_device_train_batch_size=128,
+        per_device_train_batch_size=config['data']['batch_size'],
         per_device_eval_batch_size=256,
-        num_train_epochs=5,
+        num_train_epochs=config['model']['epoch'],
         report_to=['wandb'],
         seed=42,
         metric_for_best_model='acc',
@@ -96,4 +108,7 @@ def main():
     trainer.train()
 
 if __name__ == "__main__":
-    main()
+    args = parse_args()
+    config = read_config(args.config_path)
+    main(config)
+    gc.collect()
