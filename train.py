@@ -1,6 +1,8 @@
 from typing import Optional, Union
 import pandas as pd
 import numpy as np
+import os
+os.environ["CUDA_VISIBLE_DEVICES"]="0,1"
 # from colorama import Fore, Back, Style
 from tqdm.notebook import tqdm
 import torch
@@ -11,13 +13,14 @@ from transformers import AutoTokenizer
 from transformers.tokenization_utils_base import PreTrainedTokenizerBase, PaddingStrategy
 from transformers import DataCollatorWithPadding, TrainingArguments, Trainer, AutoModel, EarlyStoppingCallback, AutoModelForSequenceClassification
 import wandb
-import os
+
+
 import json
 from sklearn.metrics import f1_score, accuracy_score
 import argparse
 import yaml
 
-os.environ["CUDA_VISIBLE_DEVICES"]="0"
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="train")
@@ -52,8 +55,8 @@ def main(config):
     tokenizer = AutoTokenizer.from_pretrained(model_path)
 
     def preprocess(example):
-        context = "[CLS] " + example['passages'] + " [SEP] " + example['questions'] +" [SEP]"
-        tokenized_example = tokenizer(context, truncation=True, padding=True)
+        context = "[CLS] " + example['questions'] + " [SEP] " + example['passages'] +" [SEP]"
+        tokenized_example = tokenizer(context, truncation=True, padding=True, add_special_tokens=False)
         tokenized_example['label'] = example['labels']
 
         return tokenized_example
@@ -78,12 +81,13 @@ def main(config):
     training_args = TrainingArguments(
         output_dir=f'./{output_dir}',
         overwrite_output_dir=True,
+        do_eval=True,
         load_best_model_at_end=True,
         save_total_limit=2,
-        evaluation_strategy="steps",
+        evaluation_strategy="epoch",
         warmup_ratio=0.8,
         learning_rate=2e-6,
-        eval_steps=500,
+        # eval_steps=500,
         logging_steps=500,
         per_device_train_batch_size=config['data']['batch_size'],
         per_device_eval_batch_size=256,
@@ -91,7 +95,7 @@ def main(config):
         report_to=['wandb'],
         seed=42,
         metric_for_best_model='acc',
-        save_strategy='steps'
+        save_strategy='epoch'
         )
 
     trainer = Trainer(
