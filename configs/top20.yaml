@@ -1,0 +1,12 @@
+Task : SelectionModel
+Experiment : SelectionModel
+seed : 42
+data: 
+    train : /home/jisukim/DPR/selection_model/datasets/gold_32/train_top20_dataset.parquet
+    valid: /home/jisukim/DPR/selection_model/datasets/gold_32/valid_top20_dataset.parquet
+    batch_size: 32
+    max_length: 512
+    output_dir: output_top20
+model:
+    model_name: klue/roberta-base
+    epoch: 5
