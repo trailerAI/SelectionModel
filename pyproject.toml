@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "dpr"
+version = "0.1.0"
+description = ""
+authors = ["merry555 <rlawltn9408@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+transformers = "^4.35.2"
+pandas = "2.0.3"
+wandb = "^0.16.0"
+torch = "2.0.0"
+faiss-gpu = "^1.7.2"
+datasets = "2.14.5"
+numpy = "1.23.2"
+ipykernel = "^6.26.0"
+wikiextractor = "^3.0.6"
+scikit-learn = "^1.3.2"
+accelerate = "^0.26.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
