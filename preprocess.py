@@ -4,7 +4,7 @@ import pandas as pd
 import argparse
 
 def main(dpath, dtype):
-    with open(f"/home/jisukim/DPR/selection_model/datasets/{dpath}/selection_model_{dtype}_dataset.json") as f:
+    with open(f"{dpath}/selection_model_{dtype}_dataset.json") as f:
         data = json.load(f)
 
     # 20
@@ -28,7 +28,7 @@ def main(dpath, dtype):
     df_top20['labels'] = labels
     df_top20['answer'] = answer
 
-    df_top20.to_parquet(f'/home/jisukim/DPR/selection_model/datasets/{dpath}/{dtype}_top20_dataset.parquet')
+    df_top20.to_parquet(f'{dpath}/{dtype}_top20_dataset.parquet')
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Run script")
