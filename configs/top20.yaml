@@ -2,11 +2,11 @@ Task : SelectionModel
 Experiment : SelectionModel
 seed : 42
 data: 
-    train : /home/jisukim/DPR/selection_model/datasets/gold_32/train_top20_dataset.parquet
-    valid: /home/jisukim/DPR/selection_model/datasets/gold_32/valid_top20_dataset.parquet
-    batch_size: 32
-    max_length: 512
-    output_dir: output_top20
+    train : /home/jisukim/DPR/selection_model/datasets/gold_32/train_top20_dataset.parquet      # DPR모델을 생성한 후, preprocess.py 통해 생성된 train 데이터 셋 경로를 지정해 줍니다.
+    valid: /home/jisukim/DPR/selection_model/datasets/gold_32/valid_top20_dataset.parquet       # DPR모델을 생성한 후, preprocess.py 통해 생성된 valid 데이터 셋 경로를 지정해 줍니다.
+    batch_size: 32                                                                              # batch size를 설정해 줍니다.
+    max_length: 512                                                                             # max length를 설정해 줍니다.
+    output_dir: output_top20                                                                    # 모델 생성 경로를 지정해 줍니다.
 model:
-    model_name: klue/roberta-base
-    epoch: 5
+    model_name: klue/roberta-base       # 모델 이름을 지정해 줍니다.
+    epoch: 5                            # epoch을 지정해 줍니다.
