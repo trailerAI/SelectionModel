@@ -1,5 +1,6 @@
 # Selection Model
 질문에 대한 답변을 생성할때, 답변 생성에 도움이 되는 context를 추출하기 위해 Selection Model을 구현했습니다.  
+모델은 [HuggingFace](https://huggingface.co/NHNDQ/SelectionModel)에 공개되어 있습니다.
 
 ## Setting
 ```
