@@ -1,5 +1,5 @@
 # Selection Model
-질문에 대한 답변을 생성하는 과정에서, 답변을 보다 효율적으로 생성하기 위해 Context 추출을 위한 Selection Model을 구현했습니다.
+질문에 대한 답변을 생성하는 과정에서, 답변을 보다 효율적으로 생성하기 위해 passage 추출을 위한 Selection Model을 구현했습니다.
 모델은 [HuggingFace](https://huggingface.co/NHNDQ/SelectionModel)에 공개되어 있습니다.
 
 ## Setting
@@ -34,7 +34,10 @@ chmod 755 ./shell/train.sh
 ```
 
 ## Inference
-
+Selection Model에 대한 AUC 결과를 확인하고 question과 passage에 대한 Selection Model 결과 확률 값이 저장되어있는 파일을 만들기 위해 아래와 같이 실행합니다.
+```
+python inference.py -model_path ./output_top20/checkpoint-252960 -dpath ./gold_32/valid_top20_dataset.parquet -spath ./datasets/valid_top20_dataset_llm.csv
+```
 
 ## Results
 
