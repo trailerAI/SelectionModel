@@ -8,7 +8,7 @@ from transformers import AutoTokenizer
 from transformers import DataCollatorWithPadding, AutoModelForSequenceClassification
 import os
 from torch.utils.data import DataLoader
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, classification_report
 import argparse
 import torch.nn.functional as F
 
@@ -17,17 +17,16 @@ def main(model_path, dpath, spath):
     tokenizer = AutoTokenizer.from_pretrained(model_path)
 
     def preprocess(example):
-        context = "[CLS] " + example['passages'] + " [SEP] " + example['questions'] +" [SEP]"
+        context = "[CLS] " + example['passages'] + " [SEP] " + example['questions'] + " [SEP]"
         tokenized_example = tokenizer(context, truncation=True, padding=True, add_special_tokens=False)
         tokenized_example['label'] = example['labels']
-
         return tokenized_example
-    
+
     test = pd.read_parquet(f"{dpath}")
     test_dataset = Dataset.from_pandas(test)
 
-    tokenized_test_dataset = test_dataset.map(preprocess, remove_columns=['questions','passages', 'labels'])
-    data_collator = DataCollatorWithPadding(tokenizer = tokenizer)
+    tokenized_test_dataset = test_dataset.map(preprocess, remove_columns=['questions', 'passages', 'labels', 'answer'])
+    data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
     test_dataloader = DataLoader(tokenized_test_dataset, batch_size=128, drop_last=False, shuffle=False, collate_fn=data_collator)
 
@@ -36,18 +35,26 @@ def main(model_path, dpath, spath):
     model.eval()
 
     preds = []
+    prob = []
 
     with torch.no_grad():
         for batch in tqdm(test_dataloader):
+            batch = {k: v.to('cuda') for k, v in batch.items()}
             output = model(**batch)
             probabilities = F.softmax(output.logits, dim=-1)
             selected_probs = probabilities[:, 1]
 
-            preds.extend(selected_probs.detach().cpu().tolist())
-            
-    test['pred'] = preds
+            _, highest_prob_indices = torch.max(probabilities, dim=1)
 
-    print(roc_auc_score(test['pred'], test['labels']))
+            prob.extend(selected_probs.detach().cpu().tolist())
+            preds.extend(highest_prob_indices.detach().cpu().tolist())
+            
+    test['preds'] = preds
+    test['prob'] = prob
+
+    
+    print("roc_auc_score: ", roc_auc_score(test['labels'], test['prob']))
+    print(classification_report(test['labels'], test['preds']))
 
     test.to_csv(f'{spath}', index=False)
 
