@@ -32,7 +32,6 @@ def main(model_path, dpath, spath):
     model = AutoModelForSequenceClassification.from_pretrained(model_path).cuda()
 
     training_args = TrainingArguments(
-        output_dir="./results",
         per_device_eval_batch_size=16,
         do_predict=True
     )
