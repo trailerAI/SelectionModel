@@ -5,12 +5,13 @@ import torch
 from datasets import Dataset
 import gc
 from transformers import AutoTokenizer
-from transformers import DataCollatorWithPadding, AutoModelForSequenceClassification
+from transformers import DataCollatorWithPadding, TrainingArguments, Trainer, AutoModel, EarlyStoppingCallback, AutoModelForSequenceClassification
 import os
 from torch.utils.data import DataLoader
 from sklearn.metrics import roc_auc_score, classification_report, accuracy_score
 import argparse
 import torch.nn.functional as F
+
 
 
 def main(model_path, dpath, spath):
@@ -25,39 +26,42 @@ def main(model_path, dpath, spath):
     test = pd.read_parquet(f"{dpath}")
     test_dataset = Dataset.from_pandas(test)
 
-    tokenized_test_dataset = test_dataset.map(preprocess, remove_columns=['questions', 'passages', 'labels', 'answer'])
-    data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
-
-    test_dataloader = DataLoader(tokenized_test_dataset, batch_size=512, drop_last=False, shuffle=False, collate_fn=data_collator)
+    # Preprocess the dataset
+    tokenized_dataset = test_dataset.map(preprocess, remove_columns=['questions', 'passages', 'labels', 'answer'])
 
     model = AutoModelForSequenceClassification.from_pretrained(model_path).cuda()
 
-    model.eval()
+    training_args = TrainingArguments(
+        output_dir="./results",
+        per_device_eval_batch_size=16,
+        do_predict=True
+    )
 
-    preds = []
-    prob = []
 
-    with torch.no_grad():
-        for batch in tqdm(test_dataloader):
-            batch = {k: v.to('cuda') for k, v in batch.items()}
-            output = model(**batch)
-            probabilities = F.softmax(output.logits, dim=-1)
-            selected_probs = probabilities[:, 1]
+    # Create a Trainer instance
+    trainer = Trainer(
+        model=model,
+        args=training_args,
+        tokenizer=tokenizer
+    )
 
-            max_indices = np.argmax(probabilities.detach().cpu(), axis=1)
+    output = trainer.predict(tokenized_dataset)
 
-            prob.extend(selected_probs.detach().cpu().tolist())
-            preds.extend(max_indices.tolist())
-            
-    test['preds'] = preds
+    predictions = output.predictions
+
+    softmax_predictions = np.exp(predictions) / np.sum(np.exp(predictions), axis=1, keepdims=True)
+    prob = softmax_predictions[:, 1]
+    pred = output.label_ids
+
+    test['preds'] = pred
     test['prob'] = prob
 
-    
     print("roc_auc_score: ", roc_auc_score(test['labels'], test['prob']))
     print(classification_report(test['labels'], test['preds'], digits=4))
     print("accuracy_score: ", accuracy_score(test['labels'], test['preds']))
 
     test.to_csv(f'{spath}', index=False)
+
 
 
 def parse_args():
