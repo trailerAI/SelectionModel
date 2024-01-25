@@ -32,12 +32,11 @@ def main(model_path, dpath, spath):
     model = AutoModelForSequenceClassification.from_pretrained(model_path).cuda()
 
     training_args = TrainingArguments(
-        per_device_eval_batch_size=16,
+        output_dir="./",
+        per_device_eval_batch_size=512,
         do_predict=True
     )
 
-
-    # Create a Trainer instance
     trainer = Trainer(
         model=model,
         args=training_args,
