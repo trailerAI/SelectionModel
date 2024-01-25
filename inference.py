@@ -58,7 +58,18 @@ def main(model_path, dpath, spath):
     print(classification_report(test['labels'], test['preds'], digits=4))
     print("accuracy_score: ", accuracy_score(test['labels'], test['preds']))
 
-    test.to_csv(f'{spath}', index=False)
+    ### 데이터셋 재정렬
+    sorted_dfs = []
+
+    for i in tqdm(range(0, len(test), 20)):
+        cols_to_sort = test.columns[i:i+20].tolist() + ['prob']
+        sorted_df = test[cols_to_sort].sort_values(by='prob', ascending=False)
+        sorted_dfs.append(sorted_df.drop(columns='prob'))
+
+    # 정렬된 데이터프레임들을 다시 병합
+    final_df = pd.concat(sorted_dfs, axis=1)
+
+    final_df.to_csv(f'{spath}', index=False)
 
 
 
