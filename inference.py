@@ -8,7 +8,7 @@ from transformers import AutoTokenizer
 from transformers import DataCollatorWithPadding, AutoModelForSequenceClassification
 import os
 from torch.utils.data import DataLoader
-from sklearn.metrics import roc_auc_score, classification_report
+from sklearn.metrics import roc_auc_score, classification_report, accuracy_score
 import argparse
 import torch.nn.functional as F
 
@@ -28,7 +28,7 @@ def main(model_path, dpath, spath):
     tokenized_test_dataset = test_dataset.map(preprocess, remove_columns=['questions', 'passages', 'labels', 'answer'])
     data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
-    test_dataloader = DataLoader(tokenized_test_dataset, batch_size=128, drop_last=False, shuffle=False, collate_fn=data_collator)
+    test_dataloader = DataLoader(tokenized_test_dataset, batch_size=512, drop_last=False, shuffle=False, collate_fn=data_collator)
 
     model = AutoModelForSequenceClassification.from_pretrained(model_path).cuda()
 
@@ -44,17 +44,18 @@ def main(model_path, dpath, spath):
             probabilities = F.softmax(output.logits, dim=-1)
             selected_probs = probabilities[:, 1]
 
-            _, highest_prob_indices = torch.max(probabilities, dim=1)
+            max_indices = np.argmax(probabilities.detach().cpu(), axis=1)
 
             prob.extend(selected_probs.detach().cpu().tolist())
-            preds.extend(highest_prob_indices.detach().cpu().tolist())
+            preds.extend(max_indices.tolist())
             
     test['preds'] = preds
     test['prob'] = prob
 
     
     print("roc_auc_score: ", roc_auc_score(test['labels'], test['prob']))
-    print(classification_report(test['labels'], test['preds']))
+    print(classification_report(test['labels'], test['preds'], digits=4))
+    print("accuracy_score: ", accuracy_score(test['labels'], test['preds']))
 
     test.to_csv(f'{spath}', index=False)
 
