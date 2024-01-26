@@ -11,7 +11,9 @@ from torch.utils.data import DataLoader
 from sklearn.metrics import roc_auc_score, classification_report, accuracy_score
 import argparse
 import torch.nn.functional as F
-
+import ctypes
+import gc
+libc = ctypes.CDLL("libc.so.6")
 
 
 def main(model_path, dpath, spath):
@@ -58,16 +60,22 @@ def main(model_path, dpath, spath):
     print(classification_report(test['labels'], test['preds'], digits=4))
     print("accuracy_score: ", accuracy_score(test['labels'], test['preds']))
 
-    ### 데이터셋 재정렬
-    sorted_dfs = []
+    test_prob_np = test.to_numpy()
 
-    for i in tqdm(range(0, len(test), 20)):
-        df_to_sort = test.iloc[i:i+20]
-        sorted_df =df_to_sort.sort_values(by='prob', ascending=False)
-        sorted_dfs.append(sorted_df)
+    _ = gc.collect()
+    libc.malloc_trim(0)
+
+    ### 데이터셋 재정렬
+    sorted_arrays = []
+
+    for i in tqdm(range(0, len(test_prob_np), 20)):
+        array_to_sort = test_prob_np[i:i+20]
+        sorted_array = array_to_sort[array_to_sort[:, 5].argsort()[::-1]]
+        sorted_arrays.append(sorted_array)
 
     # 정렬된 데이터프레임들을 다시 병합
-    final_df = pd.concat(sorted_dfs, axis=1)
+    final_array = np.vstack(sorted_arrays)
+    final_df = pd.DataFrame(final_array, columns=test.columns)
 
     final_df.to_csv(f'{spath}', index=False)
 
