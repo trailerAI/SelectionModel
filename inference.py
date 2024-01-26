@@ -20,10 +20,9 @@ def main(model_path, dpath, spath):
     def preprocess(example):
         context = "[CLS] " + example['passages'] + " [SEP] " + example['questions'] + " [SEP]"
         tokenized_example = tokenizer(context, truncation=True, padding=True, add_special_tokens=False)
-        tokenized_example['label'] = example['labels']
         return tokenized_example
 
-    test = pd.read_parquet(f"{dpath}")[:3000]
+    test = pd.read_parquet(f"{dpath}")
     test_dataset = Dataset.from_pandas(test)
 
     # Preprocess the dataset
@@ -50,7 +49,7 @@ def main(model_path, dpath, spath):
 
     softmax_predictions = np.exp(predictions) / np.sum(np.exp(predictions), axis=1, keepdims=True)
     prob = softmax_predictions[:, 1]
-    pred = output.label_ids
+    pred = np.argmax(predictions, axis=1)
 
     test['preds'] = pred
     test['prob'] = prob
@@ -63,15 +62,14 @@ def main(model_path, dpath, spath):
     sorted_dfs = []
 
     for i in tqdm(range(0, len(test), 20)):
-        df_to_sort = test[['prob']].iloc[i:i+20]
+        df_to_sort = test.iloc[i:i+20]
         sorted_df =df_to_sort.sort_values(by='prob', ascending=False)
-        sorted_dfs.append(sorted_df[['prob']])
+        sorted_dfs.append(sorted_df)
 
     # 정렬된 데이터프레임들을 다시 병합
     final_df = pd.concat(sorted_dfs, axis=1)
-    test['prob'] = final_df['prob'].tolist()
 
-    final_df.to_parquet(f'{spath}', index=False)
+    final_df.to_csv(f'{spath}', index=False)
 
 
 
