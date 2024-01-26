@@ -40,7 +40,7 @@ python inference.py -model_path ./output_top20/checkpoint-252960 -dpath ./gold_3
 ```
 
 ## Results
-
+Accuracy: 93.68%
 
 ## Contributors
 [Jisu, Kim](https://github.com/merry555), [TakSung Heo](https://github.com/HeoTaksung), [Minsu Jeong](https://github.com/skaeads12), and [Juhwan, Lee](https://github.com/juhwanlee-diquest)
