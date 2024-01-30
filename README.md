@@ -40,7 +40,15 @@ python inference.py -model_path ./output_top20/checkpoint-252960 -dpath ./gold_3
 ```
 
 ## Results
-Accuracy: 93.68%
+Accuracy about (True == Pred): 93.68%
+
+`Retrival Model` vs `Retrival Model using Selection Model`
+
+아래의 결과는 Selection Model을 통해 추출된 predict score를 내림차순으로 재정렬 후, 성능 측정
+| Model  | Top@1 | Top@5 | Top@10 | Top@20 |
+|----|-------|-------|--------|--------|
+| Retrieval Model | 37.87%| 61.81%| 71.04% | 79.04% |
+| Selection Model | 71.12%| 77.59%| 78.61% | 79.04% |
 
 ## Contributors
 [Jisu, Kim](https://github.com/merry555), [TakSung Heo](https://github.com/HeoTaksung), [Minsu Jeong](https://github.com/skaeads12), and [Juhwan, Lee](https://github.com/juhwanlee-diquest)
