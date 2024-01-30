@@ -44,7 +44,7 @@ Accuracy about (True == Pred): 93.68%
 
 `Retrival Model` vs `Retrival Model using Selection Model`
 
-아래의 결과는 Selection Model을 통해 추출된 predict score를 내림차순으로 재정렬 후, 성능 측정
+아래의 결과는 Selection Model을 통해 추출된 predict logit값을 내림차순으로 재정렬 후, 성능 측정
 | Model  | Top@1 | Top@5 | Top@10 | Top@20 |
 |----|-------|-------|--------|--------|
 | Retrieval Model | 37.87%| 61.81%| 71.04% | 79.04% |
